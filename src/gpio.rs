@@ -25,6 +25,7 @@ pub struct Flex {
     usb4604: Usb4604,
     pio: Pio,
     mode: Mode,
+    is_out_en: bool,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -76,7 +77,22 @@ impl Flex {
         } else {
             Mode::Input
         };
-        Ok(Flex { usb4604, pio, mode })
+        Ok(Flex {
+            usb4604,
+            pio,
+            mode,
+            is_out_en: is_out,
+        })
+    }
+
+    /// Create Flex pin assuming input mode, intended use is to immediately call one of the into_ methods.
+    pub(crate) fn init_ignore_mode(usb4604: Usb4604, pio: Pio) -> Flex {
+        Flex {
+            usb4604,
+            pio,
+            mode: Mode::Input,
+            is_out_en: false,
+        }
     }
 
     /// Set initial level and put the pin into push-pull output mode.
@@ -88,6 +104,12 @@ impl Flex {
         Ok(())
     }
 
+    /// Consume self, set initial level and put the pin into push-pull output mode, return [PushPullOutput].
+    pub fn into_output(mut self, initial: Level) -> Result<PushPullOutput, Error> {
+        self.set_as_output(initial)?;
+        Ok(PushPullOutput { flex: self })
+    }
+
     /// Put the pin into input mode.
     ///
     /// The internal pull-up or pull-down resistor can optionally be enabled according to pull.
@@ -96,6 +118,14 @@ impl Flex {
         self.set_pull(pull)?;
         self.mode = Mode::Input;
         Ok(())
+    }
+
+    /// Consume self, put the pin into input mode and return [Input].
+    ///
+    /// The internal pull-up or pull-down resistor can optionally be enabled according to pull.
+    pub fn into_input(mut self, pull: Pull) -> Result<Input, Error> {
+        self.set_as_input(pull)?;
+        Ok(Input { flex: self })
     }
 
     /// Put the pin into input + open-drain output mode.
@@ -111,8 +141,20 @@ impl Flex {
         Ok(())
     }
 
+    /// Consume self, put the pin into input + open-drain output mode, return [OpenDrainOutput].
+    ///
+    /// The hardware will drive the line low if you set it to low, and will leave it floating if you set it to high,
+    /// in which case you can read the input to figure out whether another device is driving the line low.
+    ///
+    /// The internal pull-up or pull-down resistor can optionally be enabled according to pull.
+    pub fn into_open_drain_output(mut self, pull: Pull) -> Result<OpenDrainOutput, Error> {
+        self.set_as_open_drain(pull)?;
+        Ok(OpenDrainOutput { flex: self })
+    }
+
     fn set_mode(&mut self, mode: Mode) -> Result<(), Error> {
         let out_en = matches!(mode, Mode::OutputPushPull);
+        self.is_out_en = out_en;
         match self.pio {
             Pio::Pio0 => self
                 .usb4604
@@ -309,5 +351,95 @@ impl Flex {
             }
         }
         Ok(())
+    }
+}
+
+impl PushPullOutput {
+    /// Set the output as high.
+    pub fn set_high(&mut self) -> Result<(), Error> {
+        self.flex.set_high()
+    }
+
+    /// Set the output as low.
+    pub fn set_low(&mut self) -> Result<(), Error> {
+        self.flex.set_low()
+    }
+
+    /// Toggle the output level.
+    pub fn toggle(&mut self) -> Result<(), Error> {
+        self.flex.toggle()
+    }
+
+    /// Set the output level.
+    pub fn set_level(&mut self, level: Level) -> Result<(), Error> {
+        self.flex.set_level(level)
+    }
+
+    /// Get previously set output level.
+    pub fn level(&self) -> Result<Level, Error> {
+        self.flex.get_output_level()
+    }
+
+    /// Returns GPIO number that this output is using.
+    pub fn pio(&self) -> Pio {
+        self.flex.pio
+    }
+}
+
+impl Input {
+    /// Returns true if pin input level is high.
+    pub fn is_high(&self) -> Result<bool, Error> {
+        self.flex.is_high()
+    }
+
+    /// Returns true if pin input level is low.
+    pub fn is_low(&self) -> Result<bool, Error> {
+        self.flex.is_low()
+    }
+
+    /// Returns GPIO number that this input is using.
+    pub fn pio(&self) -> Pio {
+        self.flex.pio
+    }
+
+    /// Enable or disable pull-up or pull-down resistor.
+    pub fn set_pull(&mut self, pull: Pull) -> Result<(), Error> {
+        self.flex.set_pull(pull)
+    }
+}
+
+impl OpenDrainOutput {
+    /// Set the pin as input, level will depend on internal or external pull-up resistor.
+    pub fn set_high_z(&mut self) -> Result<(), Error> {
+        self.flex.set_high()
+    }
+
+    /// Set the output as low.
+    pub fn set_low(&mut self) -> Result<(), Error> {
+        self.flex.set_low()
+    }
+
+    /// Toggle the output level between high-z and low.
+    pub fn toggle(&mut self) -> Result<(), Error> {
+        self.flex.toggle()
+    }
+
+    /// Set the output level.
+    pub fn set_level(&mut self, level: Level) -> Result<(), Error> {
+        self.flex.set_level(level)
+    }
+
+    /// If previously set as low, return Level::Low, otherwise read input level and return it.
+    pub fn level(&self) -> Result<Level, Error> {
+        if self.flex.is_out_en {
+            Ok(Level::Low)
+        } else {
+            self.flex.get_input_level()
+        }
+    }
+
+    /// Returns GPIO number that this open drain pin is using.
+    pub fn pio(&self) -> Pio {
+        self.flex.pio
     }
 }

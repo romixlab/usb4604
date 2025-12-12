@@ -1,5 +1,5 @@
-use crate::gpio::Pio;
-use crate::{Error, Flex, SmscReg};
+use crate::gpio::{Pio, Pull};
+use crate::{Error, Flex, Input, Level, OpenDrainOutput, PushPullOutput, SmscReg};
 use nusb::Interface;
 use nusb::MaybeFuture;
 use nusb::transfer::{ControlIn, ControlOut, ControlType, Recipient, TransferError};
@@ -42,6 +42,24 @@ impl Usb4604 {
     /// Read pin mode from the IC and create a [Flex](Flex) pin.
     pub fn gpio(&self, pio: Pio) -> Result<Flex, Error> {
         Ok(Flex::init_get_mode(self.clone(), pio)?)
+    }
+
+    /// Set initial level, configure pin as output and return [PushPullOutput].
+    pub fn output(&self, pio: Pio, initial: Level) -> Result<PushPullOutput, Error> {
+        let flex = Flex::init_ignore_mode(self.clone(), pio);
+        Ok(flex.into_output(initial)?)
+    }
+
+    /// Configure pin as input, optionally enable pull-up or pull-down resistor and return [Input].
+    pub fn input(&self, pio: Pio, pull: Pull) -> Result<Input, Error> {
+        let flex = Flex::init_ignore_mode(self.clone(), pio);
+        Ok(flex.into_input(pull)?)
+    }
+
+    /// Configure pin as input + open-drain output mode, optionally enable pull-up or pull-down resistor and return [OpenDrainOutput].
+    pub fn open_drain(&self, pio: Pio, pull: Pull) -> Result<OpenDrainOutput, Error> {
+        let flex = Flex::init_ignore_mode(self.clone(), pio);
+        Ok(flex.into_open_drain_output(pull)?)
     }
 
     pub fn read_reg<R: SmscReg>(&self) -> Result<R, TransferError> {

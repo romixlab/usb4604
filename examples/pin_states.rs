@@ -17,6 +17,7 @@ fn main() -> Result<()> {
             pin.get_output_level()?,
             pin.get_input_level()?
         );
+        // note that when pin is configured as output, input buffer seems to be getting disabled and it reads incorrect state
     }
     Ok(())
 }
