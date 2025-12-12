@@ -1,15 +1,21 @@
-use nusb::MaybeFuture;
-use std::time::Duration;
+use crate::gpio::Pio;
+use crate::{Error, Flex, SmscReg};
 use nusb::Interface;
+use nusb::MaybeFuture;
 use nusb::transfer::{ControlIn, ControlOut, ControlType, Recipient, TransferError};
-use crate::SmscReg;
+use std::time::Duration;
 
+#[derive(Clone)]
 pub struct Usb4604 {
-    interface: Interface
+    interface: Interface,
 }
 
 const CMD_REG_WRITE: u8 = 3;
 const CMD_REG_READ: u8 = 4;
+
+const VENDOR_SMSC: u16 = 0x0424;
+const PRODUCT_BRIDGE_DEV: u16 = 0x2530;
+// const PRODUCT_USB4604_HUB: u16 = 0x4502;
 
 impl Usb4604 {
     /// Create Usb4604 from an already open nusb USB [Interface](Interface).
@@ -21,12 +27,26 @@ impl Usb4604 {
     /// Error is returned if more than one device if found.
     ///
     /// If multiple device support is required, use [new](Self::new) and implement a desired filtering system.
-    pub fn open_auto() -> Result<Self, String> {
-        todo!()
+    pub fn open_auto() -> Result<Self, Error> {
+        let di = nusb::list_devices()
+            .wait()?
+            .find(|d| d.vendor_id() == VENDOR_SMSC && d.product_id() == PRODUCT_BRIDGE_DEV);
+        let Some(di) = di else {
+            return Err(Error::NoDevicesFound);
+        };
+        let device = di.open().wait()?;
+        let interface = device.claim_interface(0).wait()?;
+        Ok(Self { interface })
     }
 
-    pub fn read_reg<R: SmscReg>(&mut self) -> Result<R, TransferError> {
-        let read = self.interface
+    /// Read pin mode from the IC and create a [Flex](Flex) pin.
+    pub fn gpio(&self, pio: Pio) -> Result<Flex, Error> {
+        Ok(Flex::init_get_mode(self.clone(), pio)?)
+    }
+
+    pub fn read_reg<R: SmscReg>(&self) -> Result<R, TransferError> {
+        let read = self
+            .interface
             .control_in(
                 ControlIn {
                     control_type: ControlType::Vendor,
@@ -59,7 +79,10 @@ impl Usb4604 {
         Ok(())
     }
 
-    pub fn modify_reg<R: SmscReg, F: FnMut(&mut R)>(&mut self, mut f: F) -> Result<(), TransferError> {
+    pub fn modify_reg<R: SmscReg, F: FnMut(&mut R)>(
+        &mut self,
+        mut f: F,
+    ) -> Result<(), TransferError> {
         let mut value: R = self.read_reg()?;
         let old_value = value.value();
         f(&mut value);
