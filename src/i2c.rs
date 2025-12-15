@@ -3,7 +3,7 @@ use bitfield_struct::bitfield;
 use embedded_hal::i2c::{ErrorType, I2c, NoAcknowledgeSource, Operation, SevenBitAddress};
 use nusb::Interface;
 use nusb::MaybeFuture;
-use nusb::transfer::{ControlOut, ControlType, Recipient, TransferError};
+use nusb::transfer::{ControlIn, ControlOut, ControlType, Recipient, TransferError};
 use std::fmt::{Display, Formatter};
 use std::time::Duration;
 
@@ -122,19 +122,21 @@ impl I2c for I2cBridge {
             println!("{:?}", flags_addr);
             match op {
                 Operation::Read(buf) => {
-                    self.interface
-                        .control_out(
-                            ControlOut {
+                    let data = self
+                        .interface
+                        .control_in(
+                            ControlIn {
                                 control_type: ControlType::Vendor,
                                 recipient: Recipient::Interface,
                                 request: CMD_I2C_READ,
                                 value: flags_addr.into_bits(),
                                 index: 0, // reserved
-                                data: buf,
+                                length: buf.len() as u16,
                             },
                             self.timeout,
                         )
                         .wait()?;
+                    buf.copy_from_slice(&data);
                 }
                 Operation::Write(buf) => {
                     self.interface
