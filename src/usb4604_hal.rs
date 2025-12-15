@@ -1,4 +1,5 @@
 use crate::gpio::{Pio, Pull};
+use crate::i2c::I2cBridge;
 use crate::{Error, Flex, Input, Level, OpenDrainOutput, PushPullOutput, SmscReg};
 use nusb::Interface;
 use nusb::MaybeFuture;
@@ -10,8 +11,8 @@ pub struct Usb4604 {
     interface: Interface,
 }
 
-const CMD_REG_WRITE: u8 = 3;
-const CMD_REG_READ: u8 = 4;
+const CMD_REG_WRITE: u8 = 0x03;
+const CMD_REG_READ: u8 = 0x04;
 
 const VENDOR_SMSC: u16 = 0x0424;
 const PRODUCT_BRIDGE_DEV: u16 = 0x2530;
@@ -108,5 +109,11 @@ impl Usb4604 {
             self.write_reg(value)?;
         }
         Ok(())
+    }
+
+    /// Enable I2C bridging and return [I2cBridge]
+    pub fn i2c_bridge(&self) -> Result<I2cBridge, Error> {
+        let i2c = I2cBridge::init(self.interface.clone())?;
+        Ok(i2c)
     }
 }

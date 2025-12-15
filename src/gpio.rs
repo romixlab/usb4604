@@ -56,6 +56,7 @@ pub enum Pio {
     Pio1,
     Pio3,
     Pio8,
+    Pio9,
     Pio10,
     Pio19,
     Pio20,
@@ -68,6 +69,7 @@ impl Flex {
             Pio::Pio1 => usb4604.read_reg::<Gpio0_7Dir>()?.gpio1_out_en(),
             Pio::Pio3 => usb4604.read_reg::<Gpio0_7Dir>()?.gpio3_out_en(),
             Pio::Pio8 => usb4604.read_reg::<Gpio8_10Dir>()?.gpio8_out_en(),
+            Pio::Pio9 => usb4604.read_reg::<Gpio8_10Dir>()?.gpio9_out_en(),
             Pio::Pio10 => usb4604.read_reg::<Gpio8_10Dir>()?.gpio10_out_en(),
             Pio::Pio19 => usb4604.read_reg::<Gpio17_20Dir>()?.gpio19_out_en(),
             Pio::Pio20 => usb4604.read_reg::<Gpio17_20Dir>()?.gpio20_out_en(),
@@ -168,6 +170,9 @@ impl Flex {
             Pio::Pio8 => self
                 .usb4604
                 .modify_reg::<Gpio8_10Dir, _>(|r| r.set_gpio8_out_en(out_en)),
+            Pio::Pio9 => self
+                .usb4604
+                .modify_reg::<Gpio8_10Dir, _>(|r| r.set_gpio9_out_en(out_en)),
             Pio::Pio10 => self
                 .usb4604
                 .modify_reg::<Gpio8_10Dir, _>(|r| r.set_gpio10_out_en(out_en)),
@@ -216,6 +221,9 @@ impl Flex {
             Pio::Pio8 => self
                 .usb4604
                 .modify_reg::<Gpio8_10Output, _>(|r| r.set_gpio8_out(is_high)),
+            Pio::Pio9 => self
+                .usb4604
+                .modify_reg::<Gpio8_10Output, _>(|r| r.set_gpio9_out(is_high)),
             Pio::Pio10 => self
                 .usb4604
                 .modify_reg::<Gpio8_10Output, _>(|r| r.set_gpio10_out(is_high)),
@@ -256,6 +264,7 @@ impl Flex {
             Pio::Pio1 => self.usb4604.read_reg::<Gpio0_7Output>()?.gpio1_out(),
             Pio::Pio3 => self.usb4604.read_reg::<Gpio0_7Output>()?.gpio3_out(),
             Pio::Pio8 => self.usb4604.read_reg::<Gpio8_10Output>()?.gpio8_out(),
+            Pio::Pio9 => self.usb4604.read_reg::<Gpio8_10Output>()?.gpio9_out(),
             Pio::Pio10 => self.usb4604.read_reg::<Gpio8_10Output>()?.gpio10_out(),
             Pio::Pio19 => self.usb4604.read_reg::<Gpio17_20Output>()?.gpio19_out(),
             Pio::Pio20 => self.usb4604.read_reg::<Gpio17_20Output>()?.gpio20_out(),
@@ -281,6 +290,7 @@ impl Flex {
             Pio::Pio1 => self.usb4604.read_reg::<Gpio0_7Input>()?.gpio1_in(),
             Pio::Pio3 => self.usb4604.read_reg::<Gpio0_7Input>()?.gpio3_in(),
             Pio::Pio8 => self.usb4604.read_reg::<Gpio8_10Input>()?.gpio8_in(),
+            Pio::Pio9 => self.usb4604.read_reg::<Gpio8_10Input>()?.gpio9_in(),
             Pio::Pio10 => self.usb4604.read_reg::<Gpio8_10Input>()?.gpio10_in(),
             Pio::Pio19 => self.usb4604.read_reg::<Gpio17_20Input>()?.gpio19_in(),
             Pio::Pio20 => self.usb4604.read_reg::<Gpio17_20Input>()?.gpio20_in(),
@@ -330,6 +340,12 @@ impl Flex {
                     .modify_reg::<Gpio8_10PullUp, _>(|r| r.set_gpio8_pu(pull_up))?;
                 self.usb4604
                     .modify_reg::<Gpio8_10PullDown, _>(|r| r.set_gpio8_pd(pull_down))?;
+            }
+            Pio::Pio9 => {
+                self.usb4604
+                    .modify_reg::<Gpio8_10PullUp, _>(|r| r.set_gpio9_pu(pull_up))?;
+                self.usb4604
+                    .modify_reg::<Gpio8_10PullDown, _>(|r| r.set_gpio9_pd(pull_down))?;
             }
             Pio::Pio10 => {
                 self.usb4604

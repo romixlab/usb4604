@@ -34,6 +34,7 @@ List of verified to be working GPIO pins:
 * PIO1
 * PIO3
 * PIO8
+* PIO9
 * PIO10
 * PIO19
 * PIO20
@@ -54,3 +55,4 @@ Leaving this list here to help search engines.
 
 * [GPIO Register docs: AN1940](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ApplicationNotes/ApplicationNotes/00001940C.pdf)
 * [Register docs](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ApplicationNotes/ApplicationNotes/00001801C.pdf)
+* [I2C docs](https://ww1.microchip.com/downloads/aemDocuments/documents/OTH/ApplicationNotes/ApplicationNotes/00001941B.pdf)
