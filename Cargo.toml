@@ -3,6 +3,8 @@ name = "usb4604"
 version = "0.1.0"
 edition = "2024"
 description = "Hardware abstraction layer for USB4604 hub (GPIO control and I2C master)"
+license = "MIT"
+repository = "https://github.com/romixlab/usb4604"
 
 [dependencies]
 bitfield-struct = "0.12"
