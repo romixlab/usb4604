@@ -9,12 +9,12 @@ fn main() -> Result<()> {
 
     let mut i2c = usb4604.i2c_bridge()?;
 
-    // let r = i2c.write(0x55, &[1, 2, 3]);
-    // println!("{:?}", r);
+    let r = i2c.write(0x55, &[1, 2, 3]);
+    println!("write: {:?}", r);
 
     let mut data = [0u8; 16];
-    i2c.read(0x08, &mut data)?;
-    println!("{data:02x?}");
+    let r = i2c.read(0x08, &mut data);
+    println!("read: {r:?} data: {data:02x?}");
 
     Ok(())
 }
