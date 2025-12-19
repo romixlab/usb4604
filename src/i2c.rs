@@ -59,16 +59,16 @@ impl I2c for I2cBridge {
             let is_read = matches!(op, Operation::Read(_));
             // generate start condition on first transaction or when read is followed by write (and vice versa, but it's never used in practice?)
             let send_start = (i == 0) || (Some(is_read) != prev_is_read);
+            let is_last_transaction = i == len - 1;
             // generate NACK when slave sent enough data
-            let send_nack = is_read;
+            let send_nack = is_read && is_last_transaction;
             prev_is_read = Some(is_read);
             let flags_addr = I2cFlagsAddress::new()
                 .with_send_start(send_start)
-                .with_send_stop(i == len - 1)
+                .with_send_stop(is_last_transaction)
                 .with_send_nack(send_nack)
                 .with_slave_addr(address)
                 .with_is_read(is_read);
-            // println!("{:?}", flags_addr);
             match op {
                 Operation::Read(buf) => {
                     let data = self
