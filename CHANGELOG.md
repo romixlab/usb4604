@@ -1,3 +1,9 @@
+## [0.2.0]
+
+### 🚜 Refactor
+
+- Make initial output level optional
+
 ## [0.1.0]
 
 ### 🚀 Features
