@@ -25,7 +25,7 @@ impl Usb4604 {
     }
 
     /// Enumerate, and open the first and only available device.
-    /// Error is returned if more than one device if found.
+    /// Error is returned if more than one device is found.
     ///
     /// If multiple device support is required, use [new](Self::new) and implement a desired filtering system.
     pub fn open_auto() -> Result<Self, Error> {
@@ -45,8 +45,8 @@ impl Usb4604 {
         Ok(Flex::init_get_mode(self.clone(), pio)?)
     }
 
-    /// Set initial level, configure pin as output and return [PushPullOutput].
-    pub fn output(&self, pio: Pio, initial: Level) -> Result<PushPullOutput, Error> {
+    /// Optionally set initial level, configure pin as output and return [PushPullOutput].
+    pub fn output(&self, pio: Pio, initial: Option<Level>) -> Result<PushPullOutput, Error> {
         let flex = Flex::init_ignore_mode(self.clone(), pio);
         Ok(flex.into_output(initial)?)
     }

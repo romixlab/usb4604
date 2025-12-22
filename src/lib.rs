@@ -4,7 +4,7 @@ mod usb4604_hal;
 pub mod usb4604_reg;
 
 pub use embedded_hal::i2c::{I2c, Operation};
-pub use gpio::{Flex, Input, Level, OpenDrainOutput, Pio, PushPullOutput};
+pub use gpio::{Flex, Input, Level, Mode, OpenDrainOutput, Pio, PioIter, Pull, PushPullOutput};
 pub use i2c::{I2cBridge, I2cError};
 use nusb::transfer::TransferError;
 use std::fmt::{Display, Formatter};

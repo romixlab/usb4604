@@ -20,7 +20,7 @@ pub struct OpenDrainOutput {
 /// GPIO that can be reconfigured on the fly.
 /// Supports all features of [PushPullOutput](PushPullOutput), [Input](Input) and [OpenDrainOutput](OpenDrainOutput).
 ///
-/// Modelled after embassy Flex.
+/// Modeled after embassy Flex.
 pub struct Flex {
     usb4604: Usb4604,
     pio: Pio,
@@ -48,7 +48,7 @@ pub enum Level {
     High,
 }
 
-/// Enum over all known to be working IOs.
+/// Enum over all known to be working IO's.
 // Can be implemented in a more abstract way, but since there are so few IOs, it does not worth it.
 #[derive(Clone, Copy, EnumIter, AsRefStr, PartialEq, Debug)]
 pub enum Pio {
@@ -98,16 +98,18 @@ impl Flex {
     }
 
     /// Set initial level and put the pin into push-pull output mode.
-    pub fn set_as_output(&mut self, initial: Level) -> Result<(), Error> {
-        self.set_level(initial)?;
+    pub fn set_as_output(&mut self, initial: Option<Level>) -> Result<(), Error> {
+        if let Some(level) = initial {
+            self.set_level(level)?;
+        }
         self.set_mode(Mode::OutputPushPull)?;
         self.set_pull(Pull::None)?;
         self.mode = Mode::OutputPushPull;
         Ok(())
     }
 
-    /// Consume self, set initial level and put the pin into push-pull output mode, return [PushPullOutput].
-    pub fn into_output(mut self, initial: Level) -> Result<PushPullOutput, Error> {
+    /// Consume self, optionally set initial level and put the pin into push-pull output mode, return [PushPullOutput].
+    pub fn into_output(mut self, initial: Option<Level>) -> Result<PushPullOutput, Error> {
         self.set_as_output(initial)?;
         Ok(PushPullOutput { flex: self })
     }
@@ -457,5 +459,11 @@ impl OpenDrainOutput {
     /// Returns GPIO number that this open drain pin is using.
     pub fn pio(&self) -> Pio {
         self.flex.pio
+    }
+}
+
+impl From<bool> for Level {
+    fn from(value: bool) -> Self {
+        if value { Level::High } else { Level::Low }
     }
 }
